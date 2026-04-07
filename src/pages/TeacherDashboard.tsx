@@ -228,7 +228,8 @@ const TeacherDashboard = () => {
                     key={i}
                     className="w-14 h-18 border-2 border-primary rounded bg-card flex items-center justify-center"
                     style={{
-                      boxShadow: "0 0 15px hsl(30 100% 63% / 0.2), 0 0 30px hsl(30 100% 63% / 0.08)",
+                      boxShadow:
+                        "0 0 15px hsl(var(--primary) / 0.18), 0 0 30px hsl(var(--primary) / 0.06)",
                     }}
                   >
                     <span className="text-3xl font-extrabold font-mono text-primary">

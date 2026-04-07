@@ -57,7 +57,8 @@ const FullscreenRoomCode = ({ roomCode, isOpen, onClose }: FullscreenRoomCodePro
                 transition={{ delay: 0.1 + i * 0.06, type: "spring", stiffness: 200, damping: 20 }}
                 className="w-24 h-32 md:w-36 md:h-44 lg:w-44 lg:h-56 border-2 border-primary rounded-lg bg-card flex items-center justify-center"
                 style={{
-                  boxShadow: "0 0 40px hsl(30 100% 63% / 0.3), 0 0 80px hsl(30 100% 63% / 0.1), 0 0 120px hsl(30 100% 63% / 0.05)",
+                  boxShadow:
+                  "0 0 40px hsl(var(--primary) / 0.22), 0 0 80px hsl(var(--primary) / 0.08), 0 0 120px hsl(var(--primary) / 0.04)",
                 }}
               >
                 <span className="text-7xl md:text-8xl lg:text-9xl font-extrabold font-mono text-primary">

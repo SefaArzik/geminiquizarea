@@ -40,7 +40,8 @@ const Lobby = () => {
               key={i}
               className="w-20 h-24 md:w-24 md:h-28 border-2 border-primary rounded bg-card flex items-center justify-center"
               style={{
-                boxShadow: "0 0 20px hsl(30 100% 63% / 0.25), 0 0 40px hsl(30 100% 63% / 0.1)",
+                boxShadow:
+                  "0 0 20px hsl(var(--primary) / 0.22), 0 0 40px hsl(var(--primary) / 0.08)",
               }}
             >
               <span className="text-5xl md:text-6xl font-extrabold font-mono text-primary">
