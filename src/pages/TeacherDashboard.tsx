@@ -4,7 +4,7 @@ import Leaderboard from "@/components/Leaderboard";
 import QuestionOverview from "@/components/QuestionOverview";
 import FullscreenRoomCode from "@/components/FullscreenRoomCode";
 import { useQuizStore } from "@/lib/quiz-store";
-import { ArrowLeft, Maximize, Play, RefreshCw, Pencil } from "lucide-react";
+import { ArrowLeft, Maximize, Play, RefreshCw, Pencil, Square } from "lucide-react";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -13,6 +13,7 @@ const TeacherDashboard = () => {
     roomCode,
     questions,
     startQuiz,
+    endQuiz,
     fetchAnswers,
     reloadQuestions,
     realtimeHealth,
@@ -182,6 +183,15 @@ const TeacherDashboard = () => {
             >
               <Play size={14} />
               Testi Başlat
+            </button>
+          )}
+          {(quizStatus === "active" || quizStatus === "reviewing") && (
+            <button
+              onClick={endQuiz}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-mono font-bold uppercase tracking-wider text-destructive-foreground bg-destructive rounded hover:opacity-90 transition-all duration-100"
+            >
+              <Square size={14} />
+              Testi Bitir
             </button>
           )}
           {quizStatus === "active" && (
