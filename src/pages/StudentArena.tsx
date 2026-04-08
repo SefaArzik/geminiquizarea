@@ -53,6 +53,27 @@ const StudentArena = () => {
     }
   }, [quizStatus, phase]);
 
+  // Hydrate local answeredQuestions from DB snapshot (studentAnswers) so review works after refresh/finish.
+  useEffect(() => {
+    if (!playerId) return;
+    if (questions.length === 0) return;
+    if (Object.keys(answeredQuestions).length > 0) return;
+    if (Object.keys(studentAnswers).length === 0) return;
+
+    const next: Record<number, { selected: number; revealed: boolean }> = {};
+
+    questions.forEach((q, index) => {
+      const answersForQuestion = studentAnswers[q.id] || [];
+      const mine = answersForQuestion.find((a) => a.studentId === playerId) || null;
+      if (!mine) return;
+      next[index] = { selected: mine.selectedIndex, revealed: true };
+    });
+
+    if (Object.keys(next).length > 0) {
+      setAnsweredQuestions(next);
+    }
+  }, [playerId, questions, studentAnswers, answeredQuestions]);
+
   useEffect(() => {
     if (!roomSettings.hintModeEnabled && showHint) {
       setShowHint(false);
