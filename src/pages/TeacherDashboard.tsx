@@ -3,6 +3,17 @@ import { useNavigate } from "react-router-dom";
 import Leaderboard from "@/components/Leaderboard";
 import QuestionOverview from "@/components/QuestionOverview";
 import FullscreenRoomCode from "@/components/FullscreenRoomCode";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useQuizStore } from "@/lib/quiz-store";
 import { ArrowLeft, Maximize, Play, RefreshCw, Pencil, Square } from "lucide-react";
 
@@ -186,13 +197,35 @@ const TeacherDashboard = () => {
             </button>
           )}
           {(quizStatus === "active" || quizStatus === "reviewing") && (
-            <button
-              onClick={endQuiz}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-mono font-bold uppercase tracking-wider text-destructive-foreground bg-destructive rounded hover:opacity-90 transition-all duration-100"
-            >
-              <Square size={14} />
-              Testi Bitir
-            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-mono font-bold uppercase tracking-wider text-destructive-foreground bg-destructive rounded hover:opacity-90 transition-all duration-100"
+                >
+                  <Square size={14} />
+                  Testi Bitir
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Testi sonlandırmak istiyor musunuz?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Bu işlem oda durumunu <span className="font-semibold text-foreground">tamamlandı</span> yapar.
+                    Test sonlandıktan sonra yeni öğrenciler odaya katılamaz; mevcut katılımcılar sonuçları ve cevapları
+                    görüntülemeye devam eder.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={endQuiz}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Evet, sonlandır
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
           {quizStatus === "active" && (
             <span className="flex items-center gap-2 text-sm font-mono font-bold uppercase tracking-wider text-success">
