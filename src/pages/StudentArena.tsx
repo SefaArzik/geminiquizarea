@@ -224,10 +224,30 @@ const StudentArena = () => {
     if (resultsLocked) {
       return (
         <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center">
-          <p className="text-foreground text-xl font-bold mb-2">Sonuclar beklemede</p>
-          <p className="text-muted-foreground font-medium">
-            Ogretmen sonuclari yayinladiginda siralama ekrani acilacak.
+          <p className="text-foreground text-xl font-bold mb-2">Sonuçlar beklemede</p>
+          <p className="text-muted-foreground font-medium max-w-md">
+            Öğretmen sonuçları yayınladığında sıralama ekranı açılacak. Bu sırada kendi cevaplarını soru soru
+            inceleyebilirsin.
           </p>
+
+          <div className="mt-8 flex flex-col gap-3 w-full max-w-md">
+            <button
+              onClick={() => {
+                setReviewIndex(0);
+                setPhase("review");
+              }}
+              className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-sm uppercase tracking-wider hover:brightness-110 transition-all duration-100"
+            >
+              <Eye size={18} />
+              Cevaplarını İncele
+            </button>
+            <a
+              href="/"
+              className="flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl border border-border text-muted-foreground font-bold text-sm uppercase tracking-wider hover:border-primary hover:text-primary transition-all duration-100"
+            >
+              ← Ana Sayfa
+            </a>
+          </div>
         </div>
       );
     }
