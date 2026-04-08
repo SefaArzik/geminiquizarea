@@ -274,6 +274,13 @@ const isUnauthorizedOrRlsError = (error: unknown): boolean => {
   );
 };
 
+const isRoomClosedError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { message?: string | null; details?: string | null; hint?: string | null };
+  const text = `${e.message || ""} ${e.details || ""} ${e.hint || ""}`.toLowerCase();
+  return text.includes("room_closed") || text.includes("room closed");
+};
+
 const migrationRequiredMessage =
   "Supabase guvenlik migration'i eksik. SQL Editor'da guncel supabase-schema.sql dosyasini tamamen calistirin ve tekrar deneyin.";
 
@@ -1021,6 +1028,9 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     }
 
     if (!isRpcNotFoundError(joinRes.error)) {
+      if (isRoomClosedError(joinRes.error)) {
+        return { success: false, error: "Bu oturum sonlandirildi. Yeni katilim kabul edilmiyor." };
+      }
       return { success: false, error: "Katilim hatasi: " + formatSupabaseError(joinRes.error) };
     }
 
@@ -1037,6 +1047,9 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     }
 
     const room = roomLoad.room;
+    if (room.status === "finished") {
+      return { success: false, error: "Bu oturum sonlandirildi. Yeni katilim kabul edilmiyor." };
+    }
     const insertPlayer = await supabase
       .from("players")
       .insert({

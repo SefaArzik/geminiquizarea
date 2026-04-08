@@ -249,6 +249,12 @@ BEGIN
     RAISE EXCEPTION 'room_not_found';
   END IF;
 
+  -- Do not allow new joins after the session is finished.
+  -- Existing participants can still read results via SELECT policies.
+  IF v_room.status = 'finished' THEN
+    RAISE EXCEPTION 'room_closed';
+  END IF;
+
   v_name := btrim(coalesce(p_name, ''));
   IF char_length(v_name) < 1 OR char_length(v_name) > 40 THEN
     RAISE EXCEPTION 'invalid_player_name';
