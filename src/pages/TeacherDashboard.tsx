@@ -14,8 +14,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { useQuizStore } from "@/lib/quiz-store";
 import { ArrowLeft, Maximize, Play, RefreshCw, Pencil, Square } from "lucide-react";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ const TeacherDashboard = () => {
     questions,
     startQuiz,
     endQuiz,
+    studentAnswers,
     fetchAnswers,
     reloadQuestions,
     realtimeHealth,
@@ -37,6 +40,28 @@ const TeacherDashboard = () => {
   const [publishModeSaving, setPublishModeSaving] = useState(false);
   const [publishingResults, setPublishingResults] = useState(false);
   const [publishError, setPublishError] = useState("");
+
+  const questionCorrectSeries = useMemo(() => {
+    const data = questions.map((q, index) => {
+      const answersForQuestion = studentAnswers[q.id] || [];
+      const correctCount = answersForQuestion.reduce((acc, item) => acc + (item.isCorrect ? 1 : 0), 0);
+      return {
+        index: index + 1,
+        label: `S${index + 1}`,
+        correct: correctCount,
+      };
+    });
+
+    const maxCorrect = data.reduce((acc, item) => Math.max(acc, item.correct), 0);
+    return { data, maxCorrect };
+  }, [questions, studentAnswers]);
+
+  const chartConfig = useMemo(
+    () => ({
+      correct: { label: "Doğru", color: "hsl(var(--primary))" },
+    }),
+    [],
+  );
 
   const confirmLeaveDashboard = useCallback(() => {
     return window.confirm("Ogretmen panelinden cikmak istediginize emin misiniz?");
@@ -354,6 +379,60 @@ const TeacherDashboard = () => {
               {publishError && (
                 <p className="text-destructive text-xs font-mono mt-2">{publishError}</p>
               )}
+            </div>
+          )}
+
+          {roomCode && questions.length > 0 && (
+            <div className="p-6 border-b border-border">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold tracking-widest uppercase text-muted-foreground">
+                  Sınıf İstatistikleri
+                </h2>
+                <div className="text-right">
+                  <span className="block text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                    Doğru sayısı (soru bazlı)
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-card p-3">
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-[220px] w-full"
+                >
+                  <LineChart data={questionCorrectSeries.data} margin={{ left: 8, right: 12, top: 8, bottom: 0 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="label"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      domain={[0, Math.max(1, questionCorrectSeries.maxCorrect)]}
+                      tickLine={false}
+                      axisLine={false}
+                      width={28}
+                    />
+                    <ChartTooltip
+                      cursor={{ stroke: "hsl(var(--border))" }}
+                      content={<ChartTooltipContent indicator="line" />}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="correct"
+                      stroke="var(--color-correct)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </div>
+
+              <p className="mt-3 text-xs font-mono text-muted-foreground">
+                Not: Grafik, mevcut oturumda alınan cevaplara göre güncellenir.
+              </p>
             </div>
           )}
 
