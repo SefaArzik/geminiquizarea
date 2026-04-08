@@ -218,7 +218,8 @@ const StudentArena = () => {
   }
 
   // --- LEADERBOARD (final ranking) ---
-  if (phase === "leaderboard" || quizStatus === "finished") {
+  // Note: When quiz is finished we still allow switching to "review" mode.
+  if (phase === "leaderboard" || (quizStatus === "finished" && phase !== "review")) {
     const resultsLocked = roomSettings.resultsPublishMode === "manual" && !roomSettings.resultsPublished;
     if (resultsLocked) {
       return (
