@@ -353,7 +353,7 @@ const TeacherDashboard = () => {
                 <div className="p-3 bg-white rounded-lg">
                   <QRCodeSVG
                     value={`${window.location.origin}/join?code=${roomCode}`}
-                    size={120}
+                    size={160}
                     bgColor="#ffffff"
                     fgColor="#000000"
                     level="M"

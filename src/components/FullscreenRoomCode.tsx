@@ -89,7 +89,7 @@ const FullscreenRoomCode = ({ roomCode, isOpen, onClose }: FullscreenRoomCodePro
             <div className="p-4 bg-white rounded-xl">
               <QRCodeSVG
                 value={`${window.location.origin}/join?code=${roomCode}`}
-                size={180}
+                size={260}
                 bgColor="#ffffff"
                 fgColor="#000000"
                 level="M"
