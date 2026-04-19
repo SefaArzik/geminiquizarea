@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { X, Maximize } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { QRCodeSVG } from "qrcode.react";
 
 interface FullscreenRoomCodeProps {
   roomCode: string;
@@ -77,6 +78,27 @@ const FullscreenRoomCode = ({ roomCode, isOpen, onClose }: FullscreenRoomCodePro
           >
             Bu kodu öğrencilerinizle paylaşın
           </motion.p>
+
+          {/* QR Code */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+            className="flex flex-col items-center mt-8 gap-4"
+          >
+            <div className="p-4 bg-white rounded-xl">
+              <QRCodeSVG
+                value={`${window.location.origin}/join?code=${roomCode}`}
+                size={180}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="M"
+              />
+            </div>
+            <p className="text-sm font-mono text-muted-foreground/60">
+              veya QR kodu taratarak girin
+            </p>
+          </motion.div>
 
           <motion.p
             initial={{ opacity: 0 }}

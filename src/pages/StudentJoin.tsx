@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuizStore } from "@/lib/quiz-store";
 import { ArrowLeft } from "lucide-react";
 
@@ -9,6 +9,20 @@ const StudentJoin = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { joinRoom } = useQuizStore();
+  const [searchParams] = useSearchParams();
+
+  // Auto-fill code from QR code URL (?code=123456)
+  useEffect(() => {
+    const qrCode = searchParams.get("code");
+    if (qrCode && /^\d{6}$/.test(qrCode)) {
+      setCode(qrCode.split(""));
+      // Focus name input so student just types their name
+      setTimeout(() => {
+        const el = document.getElementById("name-input");
+        el?.focus();
+      }, 100);
+    }
+  }, [searchParams]);
 
   const handleDigitChange = (index: number, value: string) => {
     if (value.length > 1) value = value.slice(-1);

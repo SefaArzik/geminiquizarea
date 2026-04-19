@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
 import Leaderboard from "@/components/Leaderboard";
 import QuestionOverview from "@/components/QuestionOverview";
 import FullscreenRoomCode from "@/components/FullscreenRoomCode";
@@ -346,7 +347,24 @@ const TeacherDashboard = () => {
                   </div>
                 ))}
               </div>
-              <p className="text-sm font-mono text-muted-foreground text-center mt-4">
+
+              {/* QR Code */}
+              <div className="flex flex-col items-center mt-5 gap-3">
+                <div className="p-3 bg-white rounded-lg">
+                  <QRCodeSVG
+                    value={`${window.location.origin}/join?code=${roomCode}`}
+                    size={120}
+                    bgColor="#ffffff"
+                    fgColor="#000000"
+                    level="M"
+                  />
+                </div>
+                <p className="text-xs font-mono text-muted-foreground/60 text-center">
+                  QR kodu taratarak hızlı giriş
+                </p>
+              </div>
+
+              <p className="text-sm font-mono text-muted-foreground text-center mt-3">
                 Bu kodu öğrencilerinizle paylaşın
               </p>
             </div>
