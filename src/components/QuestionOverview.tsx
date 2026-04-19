@@ -145,29 +145,69 @@ const QuestionOverview = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {question.options.map((opt, i) => {
                       const isCorrect = i === question.correctIndex;
+                      const optionPickCount = answers.filter((a) => a.selectedIndex === i).length;
+                      const optionPickPercent = answers.length > 0 ? Math.round((optionPickCount / answers.length) * 100) : 0;
+                      const hasStats = answers.length > 0;
+
                       return (
                         <div
                           key={i}
-                          className={`flex items-center gap-3 px-4 py-3 rounded border transition-all duration-200 ${
+                          className={`relative flex items-center gap-3 px-4 py-3 rounded border transition-all duration-200 overflow-hidden ${
                             isRevealed && isCorrect
                               ? "border-success/50 bg-success/5"
+                              : isRevealed && !isCorrect && optionPickCount > 0
+                              ? "border-destructive/30 bg-destructive/5"
                               : "border-border bg-background"
                           }`}
                         >
+                          {/* Background fill bar showing pick rate */}
+                          {hasStats && (
+                            <motion.div
+                              className={`absolute inset-y-0 left-0 ${
+                                isRevealed && isCorrect
+                                  ? "bg-success/10"
+                                  : isRevealed && !isCorrect && optionPickCount > 0
+                                  ? "bg-destructive/8"
+                                  : "bg-primary/5"
+                              }`}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${optionPickPercent}%` }}
+                              transition={{ duration: 0.5, ease: "easeOut" }}
+                            />
+                          )}
+
                           <span
-                            className={`font-mono text-sm font-bold min-w-[1.5rem] ${
+                            className={`relative font-mono text-sm font-bold min-w-[1.5rem] ${
                               isRevealed && isCorrect ? "text-success" : "text-muted-foreground"
                             }`}
                           >
                             {String.fromCharCode(65 + i)}.
                           </span>
                           <span
-                            className={`text-sm font-medium flex-1 ${
+                            className={`relative text-sm font-medium flex-1 ${
                               isRevealed && isCorrect ? "text-success" : "text-foreground"
                             }`}
                           >
                             {opt}
                           </span>
+
+                          {/* Pick percentage badge */}
+                          {hasStats && (
+                            <motion.span
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className={`relative flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded ${
+                                isRevealed && isCorrect
+                                  ? "text-success bg-success/15"
+                                  : isRevealed && !isCorrect && optionPickCount > 0
+                                  ? "text-destructive bg-destructive/15"
+                                  : "text-muted-foreground bg-secondary"
+                              }`}
+                            >
+                              {optionPickPercent}%
+                            </motion.span>
+                          )}
+
                           <AnimatePresence>
                             {isRevealed && isCorrect && (
                               <motion.div
@@ -175,6 +215,7 @@ const QuestionOverview = () => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0 }}
                                 transition={{ duration: 0.15 }}
+                                className="relative"
                               >
                                 <CheckCircle size={16} className="text-success flex-shrink-0" />
                               </motion.div>

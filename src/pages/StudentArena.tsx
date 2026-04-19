@@ -25,6 +25,7 @@ const StudentArena = () => {
     playerId,
     roomSettings,
     nameMasks,
+    recoverStudentSession,
   } = useQuizStore();
 
   const [phase, setPhase] = useState<Phase>("waiting");
@@ -36,6 +37,38 @@ const StudentArena = () => {
   const [questionLoadError, setQuestionLoadError] = useState("");
   const [answerSubmitting, setAnswerSubmitting] = useState(false);
   const [answerSubmitError, setAnswerSubmitError] = useState("");
+  const [recovering, setRecovering] = useState(!playerId);
+
+  // Auto-recover student session from localStorage
+  useEffect(() => {
+    if (playerId) {
+      setRecovering(false);
+      return;
+    }
+    let cancelled = false;
+    setRecovering(true);
+    recoverStudentSession().then((result) => {
+      if (cancelled) return;
+      setRecovering(false);
+      if (!result.success) {
+        window.location.replace("/join");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Prevent accidental navigation (beforeunload)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
 
   const question = questions[localQuestionIndex];
   const currentAnswer = answeredQuestions[localQuestionIndex];
@@ -200,6 +233,17 @@ const StudentArena = () => {
   }, [reviewIndex]);
 
   // =================== RENDERS ===================
+
+  // --- RECOVERY loading screen ---
+  if (recovering) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-5">
+        <div className="w-5 h-5 bg-primary rounded-sm animate-pulse" />
+        <p className="text-foreground text-lg font-bold">Oturum kurtarılıyor...</p>
+        <p className="text-muted-foreground text-sm font-mono">Lütfen bekleyin</p>
+      </div>
+    );
+  }
 
   // --- WAITING for teacher ---
   if (quizStatus === "idle" || phase === "waiting") {

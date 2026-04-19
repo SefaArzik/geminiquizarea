@@ -122,7 +122,7 @@ BEGIN
   VALUES (p_code, 'idle', coalesce(p_hint_mode_enabled, true), v_mode, false)
   RETURNING * INTO v_room;
 
-  v_host_token := encode(gen_random_bytes(24), 'hex');
+  v_host_token := encode(extensions.gen_random_bytes(24), 'hex');
   INSERT INTO public.room_secrets(room_id, host_token) VALUES (v_room.id, v_host_token);
 
   RETURN jsonb_build_object(
@@ -264,7 +264,7 @@ BEGIN
   VALUES (v_room.id, v_name, 0, false, null)
   RETURNING * INTO v_player;
 
-  v_player_token := encode(gen_random_bytes(24), 'hex');
+  v_player_token := encode(extensions.gen_random_bytes(24), 'hex');
   INSERT INTO public.player_secrets(player_id, room_id, player_token)
   VALUES (v_player.id, v_room.id, v_player_token);
 
@@ -598,13 +598,13 @@ ALTER TABLE room_secrets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE player_secrets ENABLE ROW LEVEL SECURITY;
 
 INSERT INTO room_secrets(room_id, host_token)
-SELECT r.id, encode(gen_random_bytes(24), 'hex')
+SELECT r.id, encode(extensions.gen_random_bytes(24), 'hex')
 FROM rooms r
 LEFT JOIN room_secrets rs ON rs.room_id = r.id
 WHERE rs.room_id IS NULL;
 
 INSERT INTO player_secrets(player_id, room_id, player_token)
-SELECT p.id, p.room_id, encode(gen_random_bytes(24), 'hex')
+SELECT p.id, p.room_id, encode(extensions.gen_random_bytes(24), 'hex')
 FROM players p
 LEFT JOIN player_secrets ps ON ps.player_id = p.id
 WHERE ps.player_id IS NULL;

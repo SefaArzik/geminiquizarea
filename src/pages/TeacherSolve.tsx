@@ -32,6 +32,16 @@ const TeacherSolve = () => {
     }
   }, [quizStatus, phase]);
 
+  // Prevent accidental navigation (beforeunload)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
   useEffect(() => {
     if (phase !== "answering" || questions.length > 0) return;
     let cancelled = false;

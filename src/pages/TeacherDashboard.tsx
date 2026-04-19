@@ -34,12 +34,35 @@ const TeacherDashboard = () => {
     roomSettings,
     setResultsPublishMode,
     publishResults,
+    recoverTeacherSession,
   } = useQuizStore();
   const [showFullscreenCode, setShowFullscreenCode] = useState(false);
   const [resyncing, setResyncing] = useState(false);
   const [publishModeSaving, setPublishModeSaving] = useState(false);
   const [publishingResults, setPublishingResults] = useState(false);
   const [publishError, setPublishError] = useState("");
+  const [recovering, setRecovering] = useState(!roomCode);
+
+  // Auto-recover teacher session from localStorage (6-digit room code)
+  useEffect(() => {
+    if (roomCode) {
+      setRecovering(false);
+      return;
+    }
+    let cancelled = false;
+    setRecovering(true);
+    recoverTeacherSession().then((result) => {
+      if (cancelled) return;
+      setRecovering(false);
+      if (!result.success) {
+        navigate("/teacher/create");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const questionCorrectSeries = useMemo(() => {
     const data = questions.map((q, index) => {
@@ -143,13 +166,30 @@ const TeacherDashboard = () => {
       navigate("/teacher/create");
     };
 
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
     window.history.pushState({ teacherDashboardGuard: true }, "", window.location.href);
     window.addEventListener("popstate", handlePopState);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [navigate, confirmLeaveDashboard]);
+
+  if (recovering) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-5">
+        <div className="w-5 h-5 bg-primary rounded-sm animate-pulse" />
+        <p className="text-foreground text-lg font-bold">Oturum kurtarılıyor...</p>
+        <p className="text-muted-foreground text-sm font-mono">6 haneli oda kodu ile oturum yeniden yükleniyor</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

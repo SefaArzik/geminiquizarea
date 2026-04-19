@@ -109,6 +109,9 @@ interface QuizState {
   togglePlayerNameMask: (playerId: string) => Promise<{ success: boolean; error?: string }>;
   fetchPlayers: () => Promise<void>;
   fetchAnswers: () => Promise<void>;
+  recoverTeacherSession: () => Promise<{ success: boolean; roomCode?: string }>;
+  recoverStudentSession: () => Promise<{ success: boolean; roomCode?: string }>;
+  clearSession: () => void;
 }
 
 type DbQuestionRow = {
@@ -196,6 +199,93 @@ const saveHostTokenToStorage = (roomCode: string, token: string) => {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(hostTokenStorageKey(roomCode), token);
+  } catch {
+    // noop
+  }
+};
+
+// --- Session persistence (3-layer protection) ---
+const TEACHER_SESSION_KEY = "quiz_teacher_session";
+const STUDENT_SESSION_KEY = "quiz_student_session";
+
+const saveTeacherSessionToStorage = (roomCode: string, roomId: string) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(TEACHER_SESSION_KEY, JSON.stringify({ roomCode, roomId, savedAt: Date.now() }));
+  } catch {
+    // noop
+  }
+};
+
+const readTeacherSessionFromStorage = (): { roomCode: string; roomId: string } | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(TEACHER_SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.roomCode === "string" && typeof parsed?.roomId === "string") return parsed;
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const clearTeacherSessionStorage = () => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(TEACHER_SESSION_KEY);
+  } catch {
+    // noop
+  }
+};
+
+const saveStudentSessionToStorage = (
+  roomCode: string,
+  roomId: string,
+  playerId: string,
+  playerToken: string | null,
+  playerName: string,
+) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      STUDENT_SESSION_KEY,
+      JSON.stringify({ roomCode, roomId, playerId, playerToken, playerName, savedAt: Date.now() }),
+    );
+  } catch {
+    // noop
+  }
+};
+
+const readStudentSessionFromStorage = (): {
+  roomCode: string;
+  roomId: string;
+  playerId: string;
+  playerToken: string | null;
+  playerName: string;
+} | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STUDENT_SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (
+      typeof parsed?.roomCode === "string" &&
+      typeof parsed?.playerId === "string" &&
+      typeof parsed?.playerName === "string"
+    ) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const clearStudentSessionStorage = () => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(STUDENT_SESSION_KEY);
   } catch {
     // noop
   }
@@ -753,6 +843,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     });
 
     get().subscribeToRoom();
+    saveTeacherSessionToStorage(resolvedRoomCode, resolvedRoomId!);
     return { success: true };
   },
 
@@ -1024,6 +1115,13 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       });
 
       get().subscribeToRoom();
+      saveStudentSessionToStorage(
+        payload.room_code || code,
+        payload.room_id,
+        payload.player_id,
+        payload.player_token,
+        payload.player_name || name,
+      );
       return { success: true };
     }
 
@@ -1110,6 +1208,13 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     });
 
     get().subscribeToRoom();
+    saveStudentSessionToStorage(
+      room.code || code,
+      room.id,
+      playerRow!.id!,
+      null,
+      playerRow!.name || trimmedName,
+    );
     return { success: true };
   },
 
@@ -1150,6 +1255,74 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     get().subscribeToRoom();
     await get().fetchAnswers();
     return true;
+  },
+
+  // ===== TEACHER: Recover Session from localStorage =====
+  recoverTeacherSession: async () => {
+    const session = readTeacherSessionFromStorage();
+    if (!session) return { success: false };
+
+    const loaded = await get().loadRoom(session.roomCode);
+    if (!loaded) {
+      clearTeacherSessionStorage();
+      return { success: false };
+    }
+    return { success: true, roomCode: session.roomCode };
+  },
+
+  // ===== STUDENT: Recover Session from localStorage =====
+  recoverStudentSession: async () => {
+    const session = readStudentSessionFromStorage();
+    if (!session) return { success: false };
+
+    const roomLoad = await loadRoomByCode(session.roomCode);
+    if (!roomLoad.success || !roomLoad.room) {
+      clearStudentSessionStorage();
+      return { success: false };
+    }
+
+    const room = roomLoad.room;
+    const questionLoad = await loadQuestionsForRoom(room.id);
+    if (!questionLoad.success) {
+      console.error("Questions load error (recoverStudentSession):", questionLoad.error);
+    }
+    const playerLoad = await loadPlayersForRoom(room.id);
+    if (!playerLoad.success) {
+      console.error("Players load error (recoverStudentSession):", playerLoad.error);
+    }
+
+    // Verify player still exists in the room
+    const playerExists = playerLoad.players.some((p) => p.id === session.playerId);
+    if (!playerExists) {
+      clearStudentSessionStorage();
+      return { success: false };
+    }
+
+    get().unsubscribeFromRoom();
+    set({
+      roomId: room.id,
+      roomCode: room.code || session.roomCode,
+      playerId: session.playerId,
+      playerName: session.playerName,
+      playerToken: session.playerToken,
+      hostToken: null,
+      questions: questionLoad.questions,
+      quizStatus: toQuizStatus(room.status),
+      players: playerLoad.players,
+      students: playerLoad.students,
+      nameMasks: playerLoad.nameMasks,
+      roomSettings: mapRoomSettingsFromRow(room),
+      realtimeHealth: { ...initialRealtimeHealth },
+    });
+
+    get().subscribeToRoom();
+    await get().fetchAnswers();
+    return { success: true, roomCode: session.roomCode };
+  },
+
+  clearSession: () => {
+    clearTeacherSessionStorage();
+    clearStudentSessionStorage();
   },
 
   // ===== STUDENT/TEACHER: Reload Questions For Current Room =====

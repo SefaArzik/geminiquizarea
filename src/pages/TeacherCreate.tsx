@@ -29,7 +29,8 @@ Kurallar:
 2. Zorluga gore puan:
    easy=100, medium=200, hard=300
 3. points alanini eklersen difficulty ile uyumlu olmasi gerekir.
-4. Sadece JSON don.`;
+4. Sadece JSON don.
+5. CEVAPLARI KARISTIR: Dogru cevap her soruda farkli sikta olsun (0,1,2,3 yani A,B,C,D esit dagilmali). Hep ayni sikka koyma!`;
 
 const PLACEHOLDER = "Yapay zekadan aldiginiz JSON ciktiyi buraya yapistirin...";
 
